@@ -59,10 +59,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOF
-#define UART2TX_Pin GPIO_PIN_2
-#define UART2TX_GPIO_Port GPIOA
-#define USART2RX_Pin GPIO_PIN_3
-#define USART2RX_GPIO_Port GPIOA
+#define DBG_TX_Pin GPIO_PIN_2
+#define DBG_TX_GPIO_Port GPIOA
+#define DBG_RX_Pin GPIO_PIN_3
+#define DBG_RX_GPIO_Port GPIOA
+#define ACC_CS_Pin GPIO_PIN_4
+#define ACC_CS_GPIO_Port GPIOA
 #define LDG_Pin GPIO_PIN_5
 #define LDG_GPIO_Port GPIOA
 #define GNSS_RST_Pin GPIO_PIN_13
