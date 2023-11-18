@@ -59,6 +59,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOF
+#define ACC_INT1_Pin GPIO_PIN_0
+#define ACC_INT1_GPIO_Port GPIOA
+#define ACC_INT1_EXTI_IRQn EXTI0_1_IRQn
+#define ACC_INT2_Pin GPIO_PIN_1
+#define ACC_INT2_GPIO_Port GPIOA
+#define ACC_INT2_EXTI_IRQn EXTI0_1_IRQn
 #define DBG_TX_Pin GPIO_PIN_2
 #define DBG_TX_GPIO_Port GPIOA
 #define DBG_RX_Pin GPIO_PIN_3
@@ -67,22 +73,45 @@ void Error_Handler(void);
 #define ACC_CS_GPIO_Port GPIOA
 #define LDG_Pin GPIO_PIN_5
 #define LDG_GPIO_Port GPIOA
+#define ACC_MISO_Pin GPIO_PIN_6
+#define ACC_MISO_GPIO_Port GPIOA
+#define ACC_MOSI_Pin GPIO_PIN_7
+#define ACC_MOSI_GPIO_Port GPIOA
+#define ASTRO_WKUP_Pin GPIO_PIN_0
+#define ASTRO_WKUP_GPIO_Port GPIOB
+#define ASTRO_RST_Pin GPIO_PIN_1
+#define ASTRO_RST_GPIO_Port GPIOB
+#define ASTRO_EVT_Pin GPIO_PIN_2
+#define ASTRO_EVT_GPIO_Port GPIOB
+#define ASTRO_EVT_EXTI_IRQn EXTI2_3_IRQn
 #define GNSS_RST_Pin GPIO_PIN_13
 #define GNSS_RST_GPIO_Port GPIOB
 #define GNSS_PWR_SW_Pin GPIO_PIN_15
 #define GNSS_PWR_SW_GPIO_Port GPIOB
+#define ACC_SCK_Pin GPIO_PIN_8
+#define ACC_SCK_GPIO_Port GPIOD
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define GNSS_TX_Pin GPIO_PIN_8
+#define GNSS_TX_Pin GPIO_PIN_3
 #define GNSS_TX_GPIO_Port GPIOB
-#define GNSS_RX_Pin GPIO_PIN_9
+#define GNSS_RX_Pin GPIO_PIN_4
 #define GNSS_RX_GPIO_Port GPIOB
+#define GNSS_3DFIX_Pin GPIO_PIN_5
+#define GNSS_3DFIX_GPIO_Port GPIOB
+#define GNSS_3DFIX_EXTI_IRQn EXTI4_15_IRQn
+#define GNSS_JAM_Pin GPIO_PIN_6
+#define GNSS_JAM_GPIO_Port GPIOB
+#define GNSS_JAM_EXTI_IRQn EXTI4_15_IRQn
+#define ASTRO_TX_Pin GPIO_PIN_8
+#define ASTRO_TX_GPIO_Port GPIOB
+#define ASTRO_RX_Pin GPIO_PIN_9
+#define ASTRO_RX_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define HUART_DBG						&huart2
-#define HUART_GNSS						&huart3
+#define HUART_GNSS						&huart5
 #define UART_TIMEOUT 					1000
 /* USER CODE END Private defines */
 

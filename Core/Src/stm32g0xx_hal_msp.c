@@ -78,6 +78,83 @@ void HAL_MspInit(void)
 }
 
 /**
+* @brief SPI MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hspi: SPI handle pointer
+* @retval None
+*/
+void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(hspi->Instance==SPI1)
+  {
+  /* USER CODE BEGIN SPI1_MspInit 0 */
+
+  /* USER CODE END SPI1_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_SPI1_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    /**SPI1 GPIO Configuration
+    PA6     ------> SPI1_MISO
+    PA7     ------> SPI1_MOSI
+    PD8     ------> SPI1_SCK
+    */
+    GPIO_InitStruct.Pin = ACC_MISO_Pin|ACC_MOSI_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF0_SPI1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = ACC_SCK_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF1_SPI1;
+    HAL_GPIO_Init(ACC_SCK_GPIO_Port, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN SPI1_MspInit 1 */
+
+  /* USER CODE END SPI1_MspInit 1 */
+  }
+
+}
+
+/**
+* @brief SPI MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hspi: SPI handle pointer
+* @retval None
+*/
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
+{
+  if(hspi->Instance==SPI1)
+  {
+  /* USER CODE BEGIN SPI1_MspDeInit 0 */
+
+  /* USER CODE END SPI1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_SPI1_CLK_DISABLE();
+
+    /**SPI1 GPIO Configuration
+    PA6     ------> SPI1_MISO
+    PA7     ------> SPI1_MOSI
+    PD8     ------> SPI1_SCK
+    */
+    HAL_GPIO_DeInit(GPIOA, ACC_MISO_Pin|ACC_MOSI_Pin);
+
+    HAL_GPIO_DeInit(ACC_SCK_GPIO_Port, ACC_SCK_Pin);
+
+  /* USER CODE BEGIN SPI1_MspDeInit 1 */
+
+  /* USER CODE END SPI1_MspDeInit 1 */
+  }
+
+}
+
+/**
 * @brief UART MSP Initialization
 * This function configures the hardware resources used in this example
 * @param huart: UART handle pointer
@@ -144,7 +221,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     PB8     ------> USART3_TX
     PB9     ------> USART3_RX
     */
-    GPIO_InitStruct.Pin = GNSS_TX_Pin|GNSS_RX_Pin;
+    GPIO_InitStruct.Pin = ASTRO_TX_Pin|ASTRO_RX_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -154,6 +231,31 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
   /* USER CODE BEGIN USART3_MspInit 1 */
 
   /* USER CODE END USART3_MspInit 1 */
+  }
+  else if(huart->Instance==USART5)
+  {
+  /* USER CODE BEGIN USART5_MspInit 0 */
+
+  /* USER CODE END USART5_MspInit 0 */
+
+    /* Peripheral clock enable */
+    __HAL_RCC_USART5_CLK_ENABLE();
+
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**USART5 GPIO Configuration
+    PB3     ------> USART5_TX
+    PB4     ------> USART5_RX
+    */
+    GPIO_InitStruct.Pin = GNSS_TX_Pin|GNSS_RX_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF3_USART5;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN USART5_MspInit 1 */
+
+  /* USER CODE END USART5_MspInit 1 */
   }
 
 }
@@ -196,11 +298,29 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     PB8     ------> USART3_TX
     PB9     ------> USART3_RX
     */
-    HAL_GPIO_DeInit(GPIOB, GNSS_TX_Pin|GNSS_RX_Pin);
+    HAL_GPIO_DeInit(GPIOB, ASTRO_TX_Pin|ASTRO_RX_Pin);
 
   /* USER CODE BEGIN USART3_MspDeInit 1 */
 
   /* USER CODE END USART3_MspDeInit 1 */
+  }
+  else if(huart->Instance==USART5)
+  {
+  /* USER CODE BEGIN USART5_MspDeInit 0 */
+
+  /* USER CODE END USART5_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_USART5_CLK_DISABLE();
+
+    /**USART5 GPIO Configuration
+    PB3     ------> USART5_TX
+    PB4     ------> USART5_RX
+    */
+    HAL_GPIO_DeInit(GPIOB, GNSS_TX_Pin|GNSS_RX_Pin);
+
+  /* USER CODE BEGIN USART5_MspDeInit 1 */
+
+  /* USER CODE END USART5_MspDeInit 1 */
   }
 
 }
