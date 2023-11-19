@@ -112,12 +112,13 @@ void Error_Handler(void);
 #define ASTRO_RX_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+#define HTIM							&htim6
 #define HUART_DBG						&huart2
 #define HUART_GNSS						&huart5
 #define HACC							&hspi1
 #define UART_TIMEOUT 					1000
 #define UART_TX_MAX_BUFF_SIZE			250
-#define TIM_SECONDS_THS_SYSTEM_RESET	120
+#define TIM_SECONDS_THS_SYSTEM_RESET	600
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

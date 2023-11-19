@@ -49,7 +49,7 @@ UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart5;
 
 /* USER CODE BEGIN PV */
-char*		hello = "\nHello NEMO2SPACE TRACKER P assembly test.\n\n" ;
+char*		hello = "\nHello NEMO2SPACE TRACKER P assembly test firmware v0.0.1 started.\n" ;
 
 // UART
 uint8_t c = 0 ;
@@ -77,7 +77,9 @@ int32_t my_lis2dw12_platform_write ( void* , uint8_t , const uint8_t* , uint16_t
 int32_t my_lis2dw12_platform_read ( void* , uint8_t , uint8_t* , uint16_t ) ;
 void my_gnss_on ( void ) ;
 void my_gnss_off ( void ) ;
-
+void my_tim_init (void ) ;
+void my_tim_start (void ) ;
+void my_tim_stop (void ) ;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -120,29 +122,41 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit ( HUART_DBG , (uint8_t*) hello , strlen ( hello ) , UART_TIMEOUT ) ;
-  __HAL_TIM_CLEAR_IT ( &htim6 , TIM_IT_UPDATE ) ;
-    // ACC INIT
+  my_tim_init () ;
+  send_debug_logs ( "The device test started. You have max. 10 minutes to complete all steps.\n" ) ;
 
-  send_debug_logs ( "LIS2DW12 test started." ) ;
-  my_acc_ctx.write_reg = my_lis2dw12_platform_write ;
-  my_acc_ctx.read_reg = my_lis2dw12_platform_read ;
-  my_acc_ctx.handle = HACC ;
-  if ( my_lis2dw12_init ( &my_acc_ctx ) )
+    // ACC INIT
+  my_tim_start () ;
+  while ( tim_seconds < 30 )
   {
-	  send_debug_logs ( "LIS2DW12 has been initialized." ) ;
-  }
-  else
-  {
-	  send_debug_logs ( "LIS2DW12 has been not initialized." ) ;
-  }
-  my_lis2dw12_int1_wu_enable ( &my_acc_ctx ) ;
-  while ( !test )
-  {
-	  if ( HAL_GPIO_ReadPin ( ACC_INT1_GPIO_Port , ACC_INT1_Pin ) == GPIO_PIN_SET )
+	  send_debug_logs ( "* LIS2DW12 test started. You have 30 seconds to complete it." ) ;
+	  my_acc_ctx.write_reg = my_lis2dw12_platform_write ;
+	  my_acc_ctx.read_reg = my_lis2dw12_platform_read ;
+	  my_acc_ctx.handle = HACC ;
+	  if ( my_lis2dw12_init ( &my_acc_ctx ) )
 	  {
-		  test = true ;
-		  send_debug_logs ( "" ) ;
+		  send_debug_logs ( "** LIS2DW12 has been initialized." ) ;
 	  }
+	  else
+	  {
+		  send_debug_logs ( "** LIS2DW12 has not been initialized." ) ;
+	  }
+	  my_lis2dw12_int1_wu_enable ( &my_acc_ctx ) ;
+	  send_debug_logs ( "** LIS2DW12 wakeup int1 has been enabled. Try to wake up the device." ) ;
+	  while ( !test && tim_seconds < 30 )
+	  {
+		  if ( HAL_GPIO_ReadPin ( ACC_INT1_GPIO_Port , ACC_INT1_Pin ) == GPIO_PIN_SET )
+		  {
+			  test = true ;
+			  send_debug_logs ( "* Good! LIS2DW12 test has been accomplished." ) ;
+			  break ;
+		  }
+	  }
+	  if ( test )
+		  break ;
+	  else
+		  send_debug_logs ( "* Something went wrong! MCU did not received INT1." ) ;
+
   }
 
   /* USER CODE END 2 */
@@ -544,6 +558,22 @@ void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef *htim )
 			HAL_NVIC_SystemReset () ;
 		}
 	}
+}
+
+void my_tim_init (void )
+{
+	__HAL_TIM_CLEAR_IT ( HTIM , TIM_IT_UPDATE ) ;
+}
+
+void my_tim_start (void )
+{
+	tim_seconds = 0 ;
+	HAL_TIM_Base_Start_IT ( HTIM ) ;
+}
+
+void my_tim_stop (void )
+{
+	HAL_TIM_Base_Stop_IT ( HTIM ) ;
 }
 
 /* USER CODE END 4 */
