@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <string.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,15 +42,24 @@
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim6;
+
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart5;
 
 /* USER CODE BEGIN PV */
-char*		hello = "\nHello TSAT_TRACKER_P-P\n\n" ;
+char*		hello = "\nHello NEMO2SPACE TRACKER P assembly test.\n\n" ;
 
 // UART
 uint8_t c = 0 ;
+bool test = false ;
+
+// ACC
+stmdev_ctx_t my_acc_ctx ;
+
+//TIM
+uint16_t tim_seconds = 0 ;
 
 /* USER CODE END PV */
 
@@ -61,9 +70,14 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART5_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
+void send_debug_logs ( char* ) ;
+int32_t my_lis2dw12_platform_write ( void* , uint8_t , const uint8_t* , uint16_t ) ;
+int32_t my_lis2dw12_platform_read ( void* , uint8_t , uint8_t* , uint16_t ) ;
 void my_gnss_on ( void ) ;
 void my_gnss_off ( void ) ;
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,8 +117,34 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART5_UART_Init();
   MX_SPI1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit ( HUART_DBG , (uint8_t*) hello , strlen ( hello ) , UART_TIMEOUT ) ;
+  __HAL_TIM_CLEAR_IT ( &htim6 , TIM_IT_UPDATE ) ;
+    // ACC INIT
+
+  send_debug_logs ( "LIS2DW12 test started." ) ;
+  my_acc_ctx.write_reg = my_lis2dw12_platform_write ;
+  my_acc_ctx.read_reg = my_lis2dw12_platform_read ;
+  my_acc_ctx.handle = HACC ;
+  if ( my_lis2dw12_init ( &my_acc_ctx ) )
+  {
+	  send_debug_logs ( "LIS2DW12 has been initialized." ) ;
+  }
+  else
+  {
+	  send_debug_logs ( "LIS2DW12 has been not initialized." ) ;
+  }
+  my_lis2dw12_int1_wu_enable ( &my_acc_ctx ) ;
+  while ( !test )
+  {
+	  if ( HAL_GPIO_ReadPin ( ACC_INT1_GPIO_Port , ACC_INT1_Pin ) == GPIO_PIN_SET )
+	  {
+		  test = true ;
+		  send_debug_logs ( "" ) ;
+	  }
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -185,7 +225,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -199,6 +239,44 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 16000-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 1000-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
 
 }
 
@@ -364,19 +442,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ACC_CS_Pin */
-  GPIO_InitStruct.Pin = ACC_CS_Pin;
+  /*Configure GPIO pins : ACC_CS_Pin LDG_Pin */
+  GPIO_InitStruct.Pin = ACC_CS_Pin|LDG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(ACC_CS_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LDG_Pin */
-  GPIO_InitStruct.Pin = LDG_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(LDG_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ASTRO_WKUP_Pin ASTRO_RST_Pin GNSS_RST_Pin GNSS_PWR_SW_Pin */
   GPIO_InitStruct.Pin = ASTRO_WKUP_Pin|ASTRO_RST_Pin|GNSS_RST_Pin|GNSS_PWR_SW_Pin;
@@ -391,21 +462,64 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : GNSS_GEOF_Pin */
+  GPIO_InitStruct.Pin = GNSS_GEOF_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GNSS_GEOF_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_1_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 3, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+
+
+// FUNCTIONS REQUIRED BY astronode-stm32-example-asset library
+void send_debug_logs ( char* p_tx_buffer )
+{
+    uint32_t length = strlen ( p_tx_buffer ) ;
+
+    if ( length > UART_TX_MAX_BUFF_SIZE )
+    {
+        HAL_UART_Transmit ( HUART_DBG , ( uint8_t* ) "[ERROR] UART buffer reached max length.\n" , 42 , UART_TIMEOUT ) ;
+        length = UART_TX_MAX_BUFF_SIZE;
+    }
+
+    HAL_UART_Transmit ( HUART_DBG , ( uint8_t* ) p_tx_buffer , length , UART_TIMEOUT ) ;
+    HAL_UART_Transmit ( HUART_DBG , ( uint8_t* ) "\n" , 1 , UART_TIMEOUT ) ;
+}
+
+// ACC LL Function
+
+int32_t my_lis2dw12_platform_write ( void *handle , uint8_t reg , const uint8_t *bufp , uint16_t len )
+{
+	HAL_GPIO_WritePin	( GPIOA , ACC_CS_Pin , GPIO_PIN_RESET ) ;
+	HAL_Delay ( 20 ) ;
+	HAL_SPI_Transmit	( handle , &reg , 1 , 1000 ) ;
+	HAL_SPI_Transmit	( handle , (uint8_t*) bufp , len , 1000 ) ;
+	HAL_GPIO_WritePin	( GPIOA , ACC_CS_Pin , GPIO_PIN_SET) ;
+
+	return 0;
+}
+
+int32_t my_lis2dw12_platform_read ( void *handle , uint8_t reg , uint8_t *bufp , uint16_t len )
+{
+	reg |= 0x80;
+	HAL_GPIO_WritePin ( GPIOA , ACC_CS_Pin , GPIO_PIN_RESET) ;
+	HAL_Delay ( 20 ) ;
+	HAL_SPI_Transmit ( handle , &reg , 1 , 1000 ) ;
+	HAL_SPI_Receive ( handle , bufp , len , 1000 ) ;
+	HAL_GPIO_WritePin ( GPIOA , ACC_CS_Pin , GPIO_PIN_SET) ;
+
+	return 0;
+}
+
+// GNSS LL Function
 void my_gnss_on ( void )
 {
 	HAL_GPIO_WritePin ( GPIOB , GNSS_PWR_SW_Pin , GPIO_PIN_SET ) ;
@@ -418,6 +532,20 @@ void my_gnss_off ( void )
 	HAL_GPIO_WritePin ( GPIOB , GNSS_RST_Pin , GPIO_PIN_RESET ) ;
 	HAL_UART_DeInit ( HUART_GNSS ) ;
 }
+
+void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef *htim )
+{
+	if ( htim->Instance == TIM6 )
+	{
+		tim_seconds++ ;
+		if ( tim_seconds > TIM_SECONDS_THS_SYSTEM_RESET )
+		{
+			send_debug_logs ( "Watchdog activated! System restart!" ) ;
+			HAL_NVIC_SystemReset () ;
+		}
+	}
+}
+
 /* USER CODE END 4 */
 
 /**

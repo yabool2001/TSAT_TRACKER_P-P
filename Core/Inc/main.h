@@ -31,7 +31,10 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include "my_lis2dw12.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -83,7 +86,8 @@ void Error_Handler(void);
 #define ASTRO_RST_GPIO_Port GPIOB
 #define ASTRO_EVT_Pin GPIO_PIN_2
 #define ASTRO_EVT_GPIO_Port GPIOB
-#define ASTRO_EVT_EXTI_IRQn EXTI2_3_IRQn
+#define GNSS_GEOF_Pin GPIO_PIN_10
+#define GNSS_GEOF_GPIO_Port GPIOB
 #define GNSS_RST_Pin GPIO_PIN_13
 #define GNSS_RST_GPIO_Port GPIOB
 #define GNSS_PWR_SW_Pin GPIO_PIN_15
@@ -100,10 +104,8 @@ void Error_Handler(void);
 #define GNSS_RX_GPIO_Port GPIOB
 #define GNSS_3DFIX_Pin GPIO_PIN_5
 #define GNSS_3DFIX_GPIO_Port GPIOB
-#define GNSS_3DFIX_EXTI_IRQn EXTI4_15_IRQn
 #define GNSS_JAM_Pin GPIO_PIN_6
 #define GNSS_JAM_GPIO_Port GPIOB
-#define GNSS_JAM_EXTI_IRQn EXTI4_15_IRQn
 #define ASTRO_TX_Pin GPIO_PIN_8
 #define ASTRO_TX_GPIO_Port GPIOB
 #define ASTRO_RX_Pin GPIO_PIN_9
@@ -112,7 +114,10 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define HUART_DBG						&huart2
 #define HUART_GNSS						&huart5
+#define HACC							&hspi1
 #define UART_TIMEOUT 					1000
+#define UART_TX_MAX_BUFF_SIZE			250
+#define TIM_SECONDS_THS_SYSTEM_RESET	120
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
