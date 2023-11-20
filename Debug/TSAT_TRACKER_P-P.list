@@ -819,7 +819,7 @@ int main(void)
   while ( tim_seconds < 30 )
  800067e:	e048      	b.n	8000712 <main+0xe6>
   {
-	  send_debug_logs ( "* LIS2DW12 test started. You have 30 seconds to complete it." ) ;
+	  send_debug_logs ( "* LIS2DW12 test started. Try to complete it within 30 seconds." ) ;
  8000680:	4b32      	ldr	r3, [pc, #200]	; (800074c <main+0x120>)
  8000682:	0018      	movs	r0, r3
  8000684:	f000 fad2 	bl	8000c2c <send_debug_logs>
@@ -14773,7 +14773,6 @@ bool my_lis2dw12_init ( stmdev_ctx_t* ctx )
  8005282:	781b      	ldrb	r3, [r3, #0]
  8005284:	2b00      	cmp	r3, #0
  8005286:	d1f4      	bne.n	8005272 <my_lis2dw12_init+0x1a>
-
 	if ( my_lis2dw12_get_id ( ctx ) == LIS2DW12_ID )
  8005288:	687b      	ldr	r3, [r7, #4]
  800528a:	0018      	movs	r0, r3
@@ -14816,10 +14815,8 @@ bool my_lis2dw12_init ( stmdev_ctx_t* ctx )
  80052d2:	2301      	movs	r3, #1
  80052d4:	e000      	b.n	80052d8 <my_lis2dw12_init+0x80>
 	}
-
-	return false ;
+	return 0 ;
  80052d6:	2300      	movs	r3, #0
-
 }
  80052d8:	0018      	movs	r0, r3
  80052da:	46bd      	mov	sp, r7

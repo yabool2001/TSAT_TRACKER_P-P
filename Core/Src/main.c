@@ -129,7 +129,7 @@ int main(void)
   my_tim_start () ;
   while ( tim_seconds < 30 )
   {
-	  send_debug_logs ( "* LIS2DW12 test started. You have 30 seconds to complete it." ) ;
+	  send_debug_logs ( "* LIS2DW12 test started. Try to complete it within 30 seconds." ) ;
 	  my_acc_ctx.write_reg = my_lis2dw12_platform_write ;
 	  my_acc_ctx.read_reg = my_lis2dw12_platform_read ;
 	  my_acc_ctx.handle = HACC ;
@@ -156,7 +156,6 @@ int main(void)
 		  break ;
 	  else
 		  send_debug_logs ( "* Something went wrong! MCU did not received INT1." ) ;
-
   }
 
   /* USER CODE END 2 */

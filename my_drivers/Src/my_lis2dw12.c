@@ -16,7 +16,6 @@ bool my_lis2dw12_init ( stmdev_ctx_t* ctx )
 	do {
 		lis2dw12_reset_get ( ctx, &rst ) ;
 	} while ( rst ) ;
-
 	if ( my_lis2dw12_get_id ( ctx ) == LIS2DW12_ID )
 	{
 		lis2dw12_full_scale_set 	( ctx , LIS2DW12_2g ) ;
@@ -27,9 +26,7 @@ bool my_lis2dw12_init ( stmdev_ctx_t* ctx )
 		lis2dw12_wkup_threshold_set	( ctx, 2 ) ;
 		return true ;
 	}
-
-	return false ;
-
+	return 0 ;
 }
 
 uint8_t my_lis2dw12_get_id ( stmdev_ctx_t* ctx )
