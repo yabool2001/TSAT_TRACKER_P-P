@@ -125,7 +125,8 @@ int main(void)
   my_tim_init () ;
   send_debug_logs ( "The device test started. You have max. 10 minutes to complete all steps.\n" ) ;
 
-    // ACC INIT
+  // ACC INIT
+  /*
   my_tim_start () ;
   while ( tim_seconds < 30 )
   {
@@ -157,6 +158,9 @@ int main(void)
 	  else
 		  send_debug_logs ( "* Something went wrong! MCU did not received INT1." ) ;
   }
+  my_tim_start () ;
+  tim_seconds = 0 ;
+  */
 
   /* USER CODE END 2 */
 
