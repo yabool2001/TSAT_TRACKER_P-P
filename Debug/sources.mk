@@ -26,4 +26,5 @@ Core/Src \
 Core/Startup \
 Drivers/STM32G0xx_HAL_Driver/Src \
 my_drivers/Src \
+my_lib/Src \
 

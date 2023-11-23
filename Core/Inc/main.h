@@ -35,6 +35,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 #include "my_lis2dw12.h"
+#include "my_nmea.h"
+#include "my_astronode.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -114,6 +116,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define HTIM							&htim6
 #define HUART_DBG						&huart2
+#define HUART_ASTRO						&huart3
 #define HUART_GNSS						&huart5
 #define HACC							&hspi1
 #define UART_TIMEOUT 					1000

@@ -40,6 +40,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim6;
@@ -54,6 +56,7 @@ char*		hello = "\nHello NEMO2SPACE TRACKER P assembly test firmware v0.0.1 start
 // UART
 uint8_t c = 0 ;
 bool test = false ;
+char uart_buff[250] = {0} ;
 
 // ACC
 stmdev_ctx_t my_acc_ctx ;
@@ -71,6 +74,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USART5_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
 void send_debug_logs ( char* ) ;
 int32_t my_lis2dw12_platform_write ( void* , uint8_t , const uint8_t* , uint16_t ) ;
@@ -80,6 +84,7 @@ void my_gnss_off ( void ) ;
 void my_tim_init (void ) ;
 void my_tim_start (void ) ;
 void my_tim_stop (void ) ;
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -120,13 +125,13 @@ int main(void)
   MX_USART5_UART_Init();
   MX_SPI1_Init();
   MX_TIM6_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit ( HUART_DBG , (uint8_t*) hello , strlen ( hello ) , UART_TIMEOUT ) ;
   my_tim_init () ;
-  send_debug_logs ( "The device test started. You have max. 10 minutes to complete all steps.\n" ) ;
+  send_debug_logs ( "The device test started. You have max. 10 minutes to complete each steps.\n" ) ;
 
-  // ACC INIT
-  /*
+  // ACC TEST
   my_tim_start () ;
   while ( tim_seconds < 30 )
   {
@@ -158,15 +163,79 @@ int main(void)
 	  else
 		  send_debug_logs ( "* Something went wrong! MCU did not received INT1." ) ;
   }
-  my_tim_start () ;
+  my_tim_stop () ;
   tim_seconds = 0 ;
-  */
+
+
+  // GNSS TEST
+
+  uint8_t 	rxd_byte = 0 ;
+  uint8_t 	i_nmea = 0 ;
+  uint8_t 	gsv_tns = 0 ;
+  uint8_t 	nmea_message[MY_NMEA_MESSAGE_MAX_SIZE] = {0} ;
+  char*		nmea_gsv_label = "GSV" ;
+  my_tim_start () ;
+  my_gnss_on () ;
+  send_debug_logs ( "* LC76G test started. Try to complete it within 10 minutes." ) ;
+  while ( tim_seconds < TIM_SECONDS_THS_SYSTEM_RESET  )
+  {
+	  HAL_UART_Receive ( HUART_GNSS , &rxd_byte , 1 , UART_TIMEOUT ) ;
+	  HAL_UART_Transmit ( HUART_DBG , &rxd_byte , 1 , UART_TIMEOUT ) ;
+	  if ( rxd_byte )
+	  {
+		  if ( my_nmea_message ( &rxd_byte , nmea_message , &i_nmea ) == 2 )
+		  {
+			  if ( is_my_nmea_checksum_ok ( (char*) nmea_message ) )
+			  {
+				  if ( strstr ( (char*) nmea_message , nmea_gsv_label ) )
+				  {
+					  gsv_tns = my_nmea_get_gsv_tns ( (char*) nmea_message ) ;
+				  }
+				  if ( gsv_tns > 3 )
+					  break ;
+			  }
+		  }
+	  }
+  }
+  my_gnss_off () ;
+  my_tim_stop () ;
+  if ( gsv_tns )
+  {
+	  sprintf ( uart_buff , "* Good! LC76G test has been accomplished. No of SV: %d" , gsv_tns ) ;
+	  send_debug_logs ( uart_buff ) ;
+	  uart_buff[0] = 0 ;
+  }
+  else
+  {
+	  send_debug_logs ( "\n* Something went wrong! LC76G did not find any SV." ) ;
+  }
+
+  // ASTRO TEST
+  bool cfg_wr = false ;
+  tim_seconds = 0 ;
+  my_tim_start() ;
+  while ( tim_seconds < 30 && !cfg_wr )
+  {
+	  reset_astronode () ;
+	  HAL_Delay ( 100 ) ;
+	  cfg_wr = astronode_send_cfg_wr ( true , true , true , false , true , true , true , false  ) ;
+  }
+  my_tim_stop() ;
+  if ( cfg_wr )
+  {
+	  astronode_send_mpn_rr () ;
+	  send_debug_logs ( "* Good! Astronode test has been accomplished." ) ;
+  }
+  else
+  {
+	  send_debug_logs ( "\n* Something went wrong! Astronode did not work fine." ) ;
+  }
+  send_debug_logs ( "\nThis is the end of the test." ) ;
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  my_gnss_on () ;
   while (1)
   {
 	  HAL_UART_Receive	( HUART_GNSS, &c , 1 , UART_TIMEOUT ) ;
@@ -175,7 +244,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
   }
-  my_gnss_off () ;
   /* USER CODE END 3 */
 }
 
@@ -192,10 +260,16 @@ void SystemClock_Config(void)
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -217,6 +291,72 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  hrtc.Init.OutPutPullUp = RTC_OUTPUT_PULLUP_NONE;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.SubSeconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_SATURDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
 }
 
 /**
@@ -409,7 +549,7 @@ static void MX_USART5_UART_Init(void)
 
   /* USER CODE END USART5_Init 1 */
   huart5.Instance = USART5;
-  huart5.Init.BaudRate = 9600;
+  huart5.Init.BaudRate = 115200;
   huart5.Init.WordLength = UART_WORDLENGTH_8B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
@@ -578,7 +718,31 @@ void my_tim_stop (void )
 {
 	HAL_TIM_Base_Stop_IT ( HTIM ) ;
 }
-
+void reset_astronode ( void )
+{
+    HAL_GPIO_WritePin ( ASTRO_RST_GPIO_Port , ASTRO_RST_Pin , GPIO_PIN_SET ) ;
+    HAL_Delay ( 1 ) ;
+    HAL_GPIO_WritePin ( ASTRO_RST_GPIO_Port , ASTRO_RST_Pin , GPIO_PIN_RESET ) ;
+    HAL_Delay ( 250 ) ;
+}
+void send_astronode_request ( uint8_t* p_tx_buffer , uint32_t length )
+{
+    send_debug_logs ( "Message sent to the Astronode --> " ) ;
+    send_debug_logs ( ( char* ) p_tx_buffer ) ;
+    HAL_UART_Transmit ( HUART_ASTRO , p_tx_buffer , length , 1000 ) ;
+}
+uint32_t get_systick ( void )
+{
+    return HAL_GetTick() ;
+}
+bool is_systick_timeout_over ( uint32_t starting_value , uint16_t duration )
+{
+    return ( get_systick () - starting_value > duration ) ? true : false ;
+}
+bool is_astronode_character_received ( uint8_t* p_rx_char )
+{
+    return ( HAL_UART_Receive ( HUART_ASTRO , p_rx_char , 1 , 100 ) == HAL_OK ? true : false ) ;
+}
 /* USER CODE END 4 */
 
 /**

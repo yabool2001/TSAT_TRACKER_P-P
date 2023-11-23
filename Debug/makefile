@@ -9,6 +9,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include my_lib/Src/subdir.mk
 -include my_drivers/Src/subdir.mk
 -include Drivers/STM32G0xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
@@ -62,7 +63,7 @@ main-build: TSAT_TRACKER_P-P.elf secondary-outputs
 
 # Tool invocations
 TSAT_TRACKER_P-P.elf TSAT_TRACKER_P-P.map: $(OBJS) $(USER_OBJS) C:\Users\mzeml\embedded\TSAT_TRACKER_P-P\STM32G0B1RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "TSAT_TRACKER_P-P.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\mzeml\embedded\TSAT_TRACKER_P-P\STM32G0B1RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TSAT_TRACKER_P-P.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "TSAT_TRACKER_P-P.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\mzeml\embedded\TSAT_TRACKER_P-P\STM32G0B1RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TSAT_TRACKER_P-P.map" -Wl,--gc-sections -static  -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
